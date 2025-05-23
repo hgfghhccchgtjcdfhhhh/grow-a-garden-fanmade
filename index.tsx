@@ -1,0 +1,253 @@
+import React, { useState, useMemo } from "react";
+import type { NextPage } from "next";
+
+type Mutation = {
+  name: string;
+  description: string;
+  multiplier: number;
+  emoji: string;
+  specialNote?: string;
+};
+
+const mutations: Mutation[] = [
+  { name: "Normal", description: "Standard crops", multiplier: 1, emoji: "🌾" },
+  { name: "Big", description: "Larger, more valuable crops", multiplier: 2, emoji: "🌻" },
+  { name: "Wet", description: "Grows in rain, doubles value", multiplier: 2, emoji: "💧" },
+  { name: "Golden", description: "1% chance, 20x value (including 20x of all mutations)", multiplier: 20, emoji: "🌟" },
+  { name: "Shocked", description: "Triggered by thunderstorms, 100x value", multiplier: 100, emoji: "⚡" },
+  {
+    name: "Rainbow",
+    description: "Multiplies total of all other base multipliers by 50x",
+    multiplier: 50,
+    emoji: "🌈",
+    specialNote:
+      "Note: Rainbow multiplies the *total* of all other base multipliers by 50x, not additively.",
+  },
+];
+
+const weatherConditions = [
+  { label: "No Weather — Normal growth 🌤️", key: "normal" },
+  { label: "Rain — Crops grow 50% faster and may get Wet mutation 💧", key: "rain" },
+  { label: "Thunderstorm — Can trigger Shocked mutation ⚡", key: "thunderstorm" },
+];
+
+const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div
+    style={{
+      maxWidth: 900,
+      margin: "0 auto",
+      padding: 24,
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      lineHeight: 1.6,
+      color: "#222",
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Title: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <h1 style={{ fontSize: 38, marginBottom: 24, fontWeight: "900" }}>{children}</h1>
+);
+
+const Subtitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <h2 style={{ fontSize: 26, marginTop: 36, marginBottom: 16, fontWeight: "700" }}>
+    {children}
+  </h2>
+);
+
+const Paragraph: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <p style={{ fontSize: 17, marginBottom: 18 }}>{children}</p>
+);
+
+const List: React.FC<{ items: string[] }> = ({ items }) => (
+  <ul style={{ paddingLeft: 24, marginBottom: 22 }}>
+    {items.map((item, idx) => (
+      <li key={idx} style={{ marginBottom: 10 }}>
+        {item}
+      </li>
+    ))}
+  </ul>
+);
+
+const MutationCheckbox: React.FC<{
+  mutation: Mutation;
+  checked: boolean;
+  onChange: () => void;
+}> = ({ mutation, checked, onChange }) => (
+  <label
+    style={{
+      display: "flex",
+      alignItems: "center",
+      marginBottom: 12,
+      cursor: "pointer",
+      fontSize: 16,
+    }}
+  >
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      style={{ marginRight: 12, width: 18, height: 18 }}
+    />
+    <span style={{ fontSize: 20, marginRight: 8 }}>{mutation.emoji}</span>
+    <strong>{mutation.name}</strong> — {mutation.description} (
+    <em>{mutation.multiplier}x</em>)
+    {mutation.specialNote && (
+      <div
+        style={{
+          marginLeft: 34,
+          fontSize: 13,
+          fontStyle: "italic",
+          color: "#555",
+          marginTop: 4,
+        }}
+      >
+        {mutation.specialNote}
+      </div>
+    )}
+  </label>
+);
+
+const WeatherSelector: React.FC<{
+  selected: string;
+  onChange: (key: string) => void;
+}> = ({ selected, onChange }) => (
+  <select
+    value={selected}
+    onChange={(e) => onChange(e.target.value)}
+    style={{
+      fontSize: 16,
+      padding: "8px 14px",
+      borderRadius: 6,
+      border: "1px solid #ccc",
+      marginBottom: 24,
+      minWidth: 300,
+    }}
+  >
+    {weatherConditions.map(({ label, key }) => (
+      <option key={key} value={key}>
+        {label}
+      </option>
+    ))}
+  </select>
+);
+
+const Home: NextPage = () => {
+  const [selectedWeather, setSelectedWeather] = useState("normal");
+  const [selectedMutations, setSelectedMutations] = useState<string[]>([]);
+
+  const toggleMutation = (name: string) => {
+    setSelectedMutations((prev) =>
+      prev.includes(name) ? prev.filter((m) => m !== name) : [...prev, name]
+    );
+  };
+
+  // Calculate combined multiplier based on selected mutations and rules
+  const combinedMultiplier = useMemo(() => {
+    if (selectedMutations.length === 0) return 1;
+
+    // Separate Rainbow mutation because it multiplies total
+    const hasRainbow = selectedMutations.includes("Rainbow");
+    // Base multiplier = product of all except Rainbow
+    const baseMultiplier = selectedMutations
+      .filter((m) => m !== "Rainbow")
+      .reduce((acc, mName) => {
+        const mut = mutations.find((mu) => mu.name === mName);
+        return mut ? acc * mut.multiplier : acc;
+      }, 1);
+
+    if (hasRainbow) return baseMultiplier * 50;
+
+    return baseMultiplier;
+  }, [selectedMutations]);
+
+  const weatherTips = {
+    normal:
+      "No weather currently. Perfect for steady farming! 🌤️ Keep planting those seeds!",
+    rain:
+      "It's raining! 💧 Crops grow 50% faster and may develop the Wet mutation doubling their value!",
+    thunderstorm:
+      "Thunderstorms ⚡ might trigger the powerful Shocked mutation (100x value)! Time to farm smart!",
+  };
+
+  const daysSinceLastUpdate = 7;
+
+  return (
+    <Container>
+      <Title>🌱 Grow a Garden Fanmade Homepage 🌻</Title>
+      <Paragraph>
+        ⏳ Two more weeks… It has been <strong>{daysSinceLastUpdate} days</strong> since
+        the last update. Welcome to the Grow a Garden fan site — your go-to place for tips,
+        tricks, and detailed info! 🚜
+      </Paragraph>
+
+      <Subtitle>🌞 Current Weather</Subtitle>
+      <WeatherSelector selected={selectedWeather} onChange={setSelectedWeather} />
+      <Paragraph>{weatherTips[selectedWeather as keyof typeof weatherTips]}</Paragraph>
+
+      <Subtitle>🌾 Crop Mutations & Multipliers</Subtitle>
+      <Paragraph>
+        Select mutations below to see how their multipliers combine! Remember,{" "}
+        <span style={{ fontWeight: "700" }}>
+          Rainbow 🌈 multiplies the total value by 50x instead of stacking additively.
+        </span>
+      </Paragraph>
+      {mutations.map((m) => (
+        <MutationCheckbox
+          key={m.name}
+          mutation={m}
+          checked={selectedMutations.includes(m.name)}
+          onChange={() => toggleMutation(m.name)}
+        />
+      ))}
+
+      <Paragraph style={{ fontSize: 18, fontWeight: "bold", marginTop: 20 }}>
+        🔢 Total Combined Multiplier: {combinedMultiplier.toFixed(2)}x
+      </Paragraph>
+
+      <Subtitle>🌟 Tips & Tricks</Subtitle>
+      {selectedWeather === "rain" && (
+        <Paragraph>
+          Rain boosts growth speed 🌧️ and can trigger Wet mutation. Focus on crops that
+          love water!
+        </Paragraph>
+      )}
+      {selectedWeather === "thunderstorm" && (
+        <Paragraph>
+          Thunderstorms bring ⚡ Shocked mutation. Timing your harvests around storms can
+          yield massive profits!
+        </Paragraph>
+      )}
+      {selectedWeather === "normal" && (
+        <Paragraph>
+          No special weather effects right now — steady farming wins the race! 🚜
+        </Paragraph>
+      )}
+
+      <Paragraph>
+        Maximize your farm’s potential by experimenting with mutations and keeping an eye
+        on weather! Patience and strategy grow your garden greener. 🍀
+      </Paragraph>
+
+      <Subtitle>📖 About Grow a Garden</Subtitle>
+      <Paragraph>
+        Grow a Garden is an exciting Roblox game where you plant, nurture, and harvest
+        crops while exploring unique mutations and upgrading your farm to become the
+        richest gardener! 🌻
+      </Paragraph>
+      <Paragraph>
+        This fanmade page is your companion to mastering the game, providing tips,
+        mutation info, and weather strategies to boost your farming success! 🚀
+      </Paragraph>
+
+      <Subtitle>📬 Contact & Support</Subtitle>
+      <Paragraph>
+        Questions or ideas? Join the Roblox forums or community Discord to chat with
+        fellow gardeners and share your experience! 💬
+      </Paragraph>
+    </Container>
+  );
+};
+
+export default Home;
