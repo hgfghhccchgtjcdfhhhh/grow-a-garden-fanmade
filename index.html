@@ -26,6 +26,28 @@
         console.log(`Server running on http://localhost:${port}`)
       })
     </script>
+    <script>
+      <div class="custom-alert-overlay">
+        <div class="custom-alert-box">
+        <p id="custom-alert-message">Default message</p>
+        <button class="custom-alert-button" onclick="closeCustomAlert()">Close</button>
+        </div>
+        </div>
+        <audio id="alert-sound" src="https://www.soundjay.com/button/beep-07.wav"></audio>
+        <script>
+        function alert(message) {
+          document.getElementById("custom-alert-message").textContent = message;
+          document.body.classList.add("alert-active");
+          document.getElementById("alert-sound").play();
+        }
+        
+      function closeCustomAlert() {
+        document.body.classList.remove("alert-active");
+      }
+    </script>
+    <script>
+      alert('Welcome to a Fanmade Grow a Garden Page! 📈🩸☄️🌑⚜️⛈️🌈🪩🥶🌦️🌧️🌅🪴😱💩')
+    </script>
     <h1>Grow a Garden 🪴</h1>
     <p>Welcome to a fanmade Grow a Garden Page! Here you can find tips and tricks to be skilled<br>
     at the roblox game... 🥁🥁🥁🥁🥁 <strong><em>Grow a Garden!</em></strong> 🪴</p>
